@@ -128,6 +128,7 @@ const resources = {
         annualDifference: 'Yearly Impact',
         compareHeader: 'Baseline vs Simulated Comparison',
         noDataPrompt: 'Please add your salary details in the Dashboard first to simulate accurate what-if scenarios.',
+        reset: 'Reset Simulation',
       },
       goalPlanner: {
         title: 'Goal-Based Planner',
@@ -342,6 +343,7 @@ const resources = {
         annualDifference: 'वार्षिक प्रभाव',
         compareHeader: 'आधार रेखा बनाम अनुकरण तुलना',
         noDataPrompt: 'कृपया पहले डैशबोर्ड में अपना वेतन विवरण दर्ज करें।',
+        reset: 'सिम्युलेशन रीसेट करें',
       },
       goalPlanner: {
         title: 'लक्ष्य आधारित योजनाकार',
@@ -556,6 +558,7 @@ const resources = {
         annualDifference: 'वार्षिक प्रभाव',
         compareHeader: 'तुलना विहंगावलोकन',
         noDataPrompt: 'कृपया प्रथम डॅशबोर्डमध्ये तुमचे पगार तपशील प्रविष्ट करा.',
+        reset: 'सिम्युलेशन रीसेट करा',
       },
       goalPlanner: {
         title: 'ध्येय-आधारित नियोजक',

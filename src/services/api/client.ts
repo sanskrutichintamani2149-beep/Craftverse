@@ -31,6 +31,8 @@ export interface ExplainDocumentRequest {
 }
 
 export interface ExplainDocumentResponse {
+  isFinancialDocument?: boolean;
+  unreadableReason?: string | null;
   documentType: string;
   summary: string;
   importantAmounts: Array<{ label: string; amount: string; note: string }>;
@@ -57,6 +59,15 @@ export interface MythFactResponse {
 export interface RoastResponse {
   roast: string;
   punchline: string;
+}
+
+export interface HealthDiagnosticResponse {
+  diagnosticNarrative: string;
+  topStrengths: string[];
+  areasToImprove: string[];
+  actionSteps: string[];
+  roast: string;
+  roastPunchline: string;
 }
 
 export const apiClient = {
@@ -159,11 +170,23 @@ export const apiClient = {
 
   async verifyMythFact(claim: string, _image?: File, _language = 'en'): Promise<MythFactResponse> {
     try {
-      const res = await fetch(`${API_BASE_URL}/myth-or-fact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ claim, language: _language }),
-      });
+      let res: Response;
+      if (_image) {
+        const formData = new FormData();
+        formData.append('claim', claim);
+        formData.append('language', _language);
+        formData.append('image', _image);
+        res = await fetch(`${API_BASE_URL}/myth-or-fact`, {
+          method: 'POST',
+          body: formData,
+        });
+      } else {
+        res = await fetch(`${API_BASE_URL}/myth-or-fact`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ claim, language: _language }),
+        });
+      }
       if (res.ok) {
         return await res.json();
       }
@@ -246,6 +269,74 @@ export const apiClient = {
       explanation: 'This financial claim depends on individual tax bracket, investment horizon, cashflow liquidity, and market conditions.',
       reasoning: 'Indian financial instruments (PPF, NPS, Equity Mutual Funds, Sovereign Gold Bonds) carry distinct tax treatments (EEE vs EET) and lock-in periods.',
       sources: ['Income Tax Department of India (CBDT)', 'RBI Consumer Education Portal'],
+    };
+  },
+
+  async getFinancialHealthDiagnostic(data: {
+    overallScore: number;
+    ratingLabel: string;
+    savingsRate: number;
+    expenseRatio: number;
+    emergencyMonths: number;
+    monthlySavings: number;
+    monthlyInHand: number;
+    monthlyExpenses: number;
+    language: string;
+    wantRoast?: boolean;
+  }): Promise<HealthDiagnosticResponse> {
+    try {
+      const res = await fetch(`${API_BASE_URL}/financial-health`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      if (res.ok) {
+        return await res.json();
+      }
+    } catch {
+      // Deterministic fallback if server is unavailable
+    }
+
+    const { overallScore, ratingLabel, savingsRate, emergencyMonths, monthlyInHand, monthlyExpenses } = data;
+    const isGood = overallScore >= 60;
+
+    let narrative = `With a diagnostic score of ${overallScore}/100 (${ratingLabel}), your financial baseline shows ${
+      isGood ? 'sound fundamentals' : 'vulnerabilities that need immediate structuring'
+    }. Your savings rate stands at ${savingsRate.toFixed(1)}% of your ₹${Math.round(monthlyInHand).toLocaleString('en-IN')} take-home pay, with an emergency cushion covering ${emergencyMonths.toFixed(1)} months of basic living costs.`;
+
+    if (data.language === 'hi') {
+      narrative = `${overallScore}/100 (${ratingLabel}) के डायग्नोस्टिक स्कोर के साथ, आपका वित्तीय स्वास्थ्य ${
+        isGood ? 'मजबूत स्थिति' : 'ध्यान देने योग्य कमजोरियां'
+      } दर्शाता है। आपकी बचत दर ₹${Math.round(monthlyInHand).toLocaleString('en-IN')} की इन-हैंड सैलरी पर ${savingsRate.toFixed(1)}% है, और आपके पास ${emergencyMonths.toFixed(1)} महीने के खर्च का बैकअप है।`;
+    } else if (data.language === 'mr') {
+      narrative = `${overallScore}/100 (${ratingLabel}) च्या डायग्नोस्टिक स्कोअरसह, तुमचे आर्थिक स्वास्थ्य ${
+        isGood ? 'चांगल्या स्थितीत' : 'त्वरित लक्ष देण्याची गरज असलेले'
+      } दिसते. ₹${Math.round(monthlyInHand).toLocaleString('en-IN')} इन-हँड उत्पन्नावर तुमचा बचत दर ${savingsRate.toFixed(1)}% असून, तुमच्याकडे ${emergencyMonths.toFixed(1)} महिन्यांचा आपत्कालीन निधी उपलब्ध आहे.`;
+    }
+
+    const roastObj = await this.generateRoast({
+      monthlyInHand,
+      expenses: monthlyExpenses,
+      savingsRate,
+    });
+
+    return {
+      diagnosticNarrative: narrative,
+      topStrengths: [
+        savingsRate >= 20 ? 'Strong savings discipline exceeding 20%' : 'Consistent active cashflow',
+        emergencyMonths >= 3 ? 'Dependable emergency runway buffer' : 'Documented monthly expense structure',
+      ],
+      areasToImprove: [
+        emergencyMonths < 6 ? 'Expand liquid emergency reserves to 6 months of expenses' : 'Optimize high-interest liabilities',
+        savingsRate < 30 ? 'Gradually scale savings from current rate towards 30%' : 'Diversify into inflation-beating asset classes',
+      ],
+      actionSteps: [
+        'Set up automated recurring SIP transfer on salary credit day',
+        'Review discretionary recurring subscriptions and weekend spends',
+        'Maintain emergency fund in liquid mutual fund or auto-sweep fixed deposit',
+      ],
+      roast: roastObj.roast,
+      roastPunchline: roastObj.punchline,
     };
   },
 

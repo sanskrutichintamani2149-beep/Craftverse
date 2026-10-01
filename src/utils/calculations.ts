@@ -401,17 +401,20 @@ export const evaluateFinancialHealth = (
 
   const overallScore = Math.min(100, savingsScore + expenseScore + runwayScore + stabilityScore);
 
-  let ratingLabel = 'Needs Immediate Attention';
-  let colorHex = '#EF4444'; // Red
-  if (overallScore >= 80) {
-    ratingLabel = 'Rock Solid & Thriving';
-    colorHex = '#19E3C0'; // Aqua
+  let ratingLabel = 'Critical';
+  let colorHex = '#EF4444'; // Red (<40)
+  if (overallScore >= 90) {
+    ratingLabel = 'Elite';
+    colorHex = '#10B981'; // bright teal/green
+  } else if (overallScore >= 75) {
+    ratingLabel = 'Strong';
+    colorHex = '#19E3C0'; // teal
   } else if (overallScore >= 60) {
-    ratingLabel = 'Healthy with Room to Grow';
-    colorHex = '#12B8FF'; // Cyan
+    ratingLabel = 'Fair';
+    colorHex = '#3B82F6'; // blue
   } else if (overallScore >= 40) {
-    ratingLabel = 'Moderate / Vulnerable to Shocks';
-    colorHex = '#F59E0B'; // Amber
+    ratingLabel = 'Needs Attention';
+    colorHex = '#F59E0B'; // amber
   }
 
   const areasToImprove: string[] = [];
@@ -438,10 +441,10 @@ export const evaluateFinancialHealth = (
   }
 
   const radarData = [
-    { subject: 'Savings Rate', score: Math.round((savingsScore / 25) * 100), fullMark: 100 },
+    { subject: 'Savings Discipline', score: Math.round((savingsScore / 25) * 100), fullMark: 100 },
     { subject: 'Expense Control', score: Math.round((expenseScore / 25) * 100), fullMark: 100 },
-    { subject: 'Emergency Runway', score: Math.round((runwayScore / 25) * 100), fullMark: 100 },
-    { subject: 'Income Surplus', score: Math.round((stabilityScore / 25) * 100), fullMark: 100 },
+    { subject: 'Emergency Readiness', score: Math.round((runwayScore / 25) * 100), fullMark: 100 },
+    { subject: 'Cashflow Surplus', score: Math.round((stabilityScore / 25) * 100), fullMark: 100 },
   ];
 
   return {

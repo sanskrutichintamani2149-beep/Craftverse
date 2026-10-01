@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Scale,
@@ -6,11 +7,10 @@ import {
   CheckCircle2,
   XCircle,
   HelpCircle,
-  BookOpen,
   Bot,
-  Sparkles,
-  ExternalLink,
+  RotateCcw,
   ShieldCheck,
+  Image as ImageIcon,
 } from 'lucide-react';
 import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
@@ -19,6 +19,7 @@ import { useFinancialData } from '@/context/FinancialDataContext';
 
 export const MythOrFactPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const navigate = useNavigate();
   const { addMythFactVerification } = useFinancialData();
 
   const [claimText, setClaimText] = useState('');
@@ -26,11 +27,13 @@ export const MythOrFactPage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<MythFactResponse | null>(null);
 
+  // Exact 5 locked chips from Item 9
   const sampleClaims = [
-    'Paying only the minimum due on a credit card is fine and will not harm you.',
-    'Holding a credit card hurts your CIBIL score.',
-    'Mutual fund SIPs provide guaranteed returns if held for 5 years.',
-    'Term insurance is a complete waste of money if you survive the policy period.',
+    'Paying only the minimum due on a credit card is fine',
+    'Credit cards ruin your CIBIL score',
+    'SIP guarantees returns in 5 years',
+    'Term insurance is a waste if you survive',
+    '6 months emergency fund is mandatory',
   ];
 
   const handleVerify = async (textToVerify?: string) => {
@@ -43,7 +46,7 @@ export const MythOrFactPage: React.FC = () => {
       setResult(data);
 
       addMythFactVerification({
-        claim,
+        claim: claim || `[Image: ${claimImage?.name}]`,
         verdict: data.verdict,
         confidence: data.confidence,
         explanation: data.explanation,
@@ -52,7 +55,7 @@ export const MythOrFactPage: React.FC = () => {
         verifiedAt: new Date().toISOString(),
       });
     } catch {
-      // Error handling
+      // Error handled gracefully
     } finally {
       setLoading(false);
     }
@@ -60,9 +63,14 @@ export const MythOrFactPage: React.FC = () => {
 
   const handleAskMentorAboutClaim = () => {
     if (!result) return;
-    const prompt = `I verified the claim: "${claimText}". The verdict is ${result.verdict} (${result.confidence}% confidence). Can you elaborate on the underlying financial rules?`;
-    const event = new CustomEvent('open-ai-mentor', { detail: { prompt } });
-    window.dispatchEvent(event);
+    const prompt = `I verified the claim: "${claimText || 'Uploaded claim'}". The verdict is ${result.verdict} (${result.confidence}% confidence). Can you elaborate on the underlying Indian financial regulations and practical implications?`;
+    navigate('/mentor', { state: { initialPrompt: prompt } });
+  };
+
+  const handleReset = () => {
+    setClaimText('');
+    setClaimImage(null);
+    setResult(null);
   };
 
   return (
@@ -98,7 +106,7 @@ export const MythOrFactPage: React.FC = () => {
         {/* Quick Suggestion Chips */}
         <div className="space-y-2">
           <span className="text-[11px] font-semibold text-typography-muted uppercase tracking-wider block">
-            Popular Claims to Verify:
+            Common Financial Claims to Verify:
           </span>
           <div className="flex flex-wrap gap-2">
             {sampleClaims.map((claim, idx) => (
@@ -109,7 +117,7 @@ export const MythOrFactPage: React.FC = () => {
                   setClaimText(claim);
                   handleVerify(claim);
                 }}
-                className="text-left text-xs py-1.5 px-3 rounded-xl glass-tile hover:border-brand-cyan text-typography-bodyDark hover:text-white transition-all"
+                className="text-left text-xs py-1.5 px-3 rounded-xl glass-tile hover:border-brand-cyan text-typography-bodyDark hover:text-white transition-all border border-brand-cyan/20"
               >
                 "{claim}"
               </button>
@@ -117,7 +125,7 @@ export const MythOrFactPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Optional Image Upload */}
+        {/* Optional Image Upload & Action Bar */}
         <div className="pt-2 border-t border-brand-cyan/15 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <label className="inline-flex items-center gap-2 text-xs text-brand-cyan cursor-pointer hover:underline">
             <Upload className="w-4 h-4" />
@@ -139,17 +147,30 @@ export const MythOrFactPage: React.FC = () => {
             />
           </label>
 
-          <Button
-            type="button"
-            variant="primary"
-            size="md"
-            withArrow={true}
-            isLoading={loading}
-            disabled={!claimText.trim() && !claimImage}
-            onClick={() => handleVerify()}
-          >
-            {loading ? t('mythOrFact.verifying') : t('mythOrFact.checkBtn')}
-          </Button>
+          <div className="flex items-center gap-3">
+            {(claimText || claimImage) && (
+              <button
+                type="button"
+                onClick={handleReset}
+                className="text-xs text-typography-muted hover:text-white flex items-center gap-1 transition-colors"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Reset</span>
+              </button>
+            )}
+
+            <Button
+              type="button"
+              variant="primary"
+              size="md"
+              withArrow={true}
+              isLoading={loading}
+              disabled={(!claimText.trim() && !claimImage) || loading}
+              onClick={() => handleVerify()}
+            >
+              {loading ? t('mythOrFact.verifying') : t('mythOrFact.checkBtn')}
+            </Button>
+          </div>
         </div>
       </Card>
 
@@ -262,12 +283,21 @@ export const MythOrFactPage: React.FC = () => {
               </div>
             </div>
 
-            {/* CTA to Discuss with AI Mentor */}
-            <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
+            {/* Footer Actions: Check Another Claim & Discuss with AI Mentor */}
+            <div className="mt-6 pt-4 border-t border-white/10 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <Button
                 variant="secondary"
                 size="sm"
-                icon={<Bot className="w-4 h-4 text-brand-cyan" />}
+                icon={<RotateCcw className="w-3.5 h-3.5" />}
+                onClick={handleReset}
+              >
+                Check Another Claim
+              </Button>
+
+              <Button
+                variant="primary"
+                size="sm"
+                icon={<Bot className="w-4 h-4" />}
                 onClick={handleAskMentorAboutClaim}
               >
                 Discuss with AI Mentor

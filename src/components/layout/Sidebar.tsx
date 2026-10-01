@@ -30,7 +30,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile, className = '' 
       label: t('nav.termopedia'),
       icon: BookOpen,
       exact: true,
-      isActiveMatch: (path: string) => path === '/' || path.startsWith('/term/'),
+      isActiveMatch: (path: string) => path === '/' || path.startsWith('/term/') || path.startsWith('/track/'),
     },
     {
       to: '/dashboard',
@@ -72,7 +72,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile, className = '' 
 
   return (
     <aside
-      className={`w-72 shrink-0 h-screen sticky top-0 flex flex-col justify-between p-5 border-r border-surface-darkBorder/40 dark:border-brand-cyan/20 bg-[#040A1C]/90 dark:bg-[#040A1C]/90 backdrop-blur-xl z-40 ${className}`}
+      className={`w-72 shrink-0 h-screen flex flex-col justify-between p-5 border-r border-slate-200/80 dark:border-brand-cyan/20 bg-white/95 dark:bg-[#040A1C]/90 backdrop-blur-xl z-40 overflow-y-auto ${className}`}
     >
       {/* Top Header / Logo */}
       <div className="flex flex-col gap-6">
@@ -81,7 +81,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile, className = '' 
           {onCloseMobile && (
             <button
               onClick={onCloseMobile}
-              className="lg:hidden p-2 rounded-xl text-typography-muted hover:text-white"
+              className="lg:hidden p-2 rounded-xl text-slate-500 dark:text-typography-muted hover:text-slate-900 dark:hover:text-white"
               aria-label="Close navigation"
             >
               <X className="w-5 h-5" />
@@ -102,15 +102,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile, className = '' 
                 onClick={onCloseMobile}
                 className={`flex items-center gap-3.5 px-3.5 py-3 rounded-2xl text-sm font-semibold transition-all duration-200 group relative ${
                   isActive
-                    ? 'text-white bg-gradient-to-r from-brand-blue/40 via-brand-cyan/25 to-brand-teal/20 border border-brand-cyan/50 shadow-[0_0_20px_rgba(18,184,255,0.25)]'
-                    : 'text-typography-bodyDark hover:text-white hover:bg-white/5 border border-transparent'
+                    ? 'text-white bg-gradient-to-r from-brand-blue/90 via-brand-cyan/80 to-brand-teal/80 dark:from-brand-blue/40 dark:via-brand-cyan/25 dark:to-brand-teal/20 border border-brand-blue/50 dark:border-brand-cyan/50 shadow-[0_4px_16px_rgba(19,70,224,0.25)] dark:shadow-[0_0_20px_rgba(18,184,255,0.25)]'
+                    : 'text-[#2C3E6B] dark:text-typography-bodyDark hover:text-[#0B1B4A] dark:hover:text-white hover:bg-slate-100/80 dark:hover:bg-white/5 border border-transparent'
                 }`}
               >
                 <div
                   className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 transition-transform duration-200 group-hover:scale-105 ${
                     isActive
                       ? 'bg-brand-cyan text-brand-dark shadow-[0_0_12px_rgba(18,184,255,0.4)]'
-                      : 'bg-brand-cyan/10 text-brand-cyan group-hover:bg-brand-cyan/20'
+                      : 'bg-brand-cyan/10 text-brand-blue dark:text-brand-cyan group-hover:bg-brand-cyan/20'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -127,7 +127,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ onCloseMobile, className = '' 
       </div>
 
       {/* Item 8: Dark / Light Mode (Appearance toggle row) */}
-      <div className="pt-4 border-t border-brand-cyan/15">
+      <div className="pt-4 border-t border-slate-200 dark:border-brand-cyan/15">
         <ThemeToggle isSidebarRow />
       </div>
     </aside>

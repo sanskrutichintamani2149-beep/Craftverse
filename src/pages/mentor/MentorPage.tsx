@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Bot,
@@ -23,6 +24,7 @@ interface Message {
 
 export const MentorPage: React.FC = () => {
   const { t, i18n } = useTranslation();
+  const location = useLocation();
   const { profile, salaryBreakdown, goals, termCalculations } = useFinancialData();
 
   const [messages, setMessages] = useState<Message[]>([]);
@@ -40,6 +42,24 @@ export const MentorPage: React.FC = () => {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, loading]);
+
+  useEffect(() => {
+    const prompt = location.state?.initialPrompt;
+    if (prompt) {
+      handleSend(prompt);
+      window.history.replaceState({}, document.title);
+    }
+  }, [location.state]);
+
+  useEffect(() => {
+    const handleCustomEvent = (e: any) => {
+      if (e.detail?.prompt) {
+        handleSend(e.detail.prompt);
+      }
+    };
+    window.addEventListener('open-ai-mentor', handleCustomEvent);
+    return () => window.removeEventListener('open-ai-mentor', handleCustomEvent);
+  }, []);
 
   const handleSend = async (textToSend?: string) => {
     const query = textToSend || inputMessage;

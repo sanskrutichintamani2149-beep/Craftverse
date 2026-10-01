@@ -9,13 +9,13 @@ export const AppShell: React.FC = () => {
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen flex text-typography-bodyDark relative overflow-x-hidden">
+    <div className="min-h-screen flex text-slate-800 dark:text-typography-bodyDark relative">
       {/* Ambient background glows */}
       <BackdropScene variant="subtle" />
 
-      {/* Desktop / Tablet Sidebar (sticky) */}
-      <div className="hidden lg:block">
-        <Sidebar />
+      {/* Desktop / Tablet Sidebar (fixed, full-height viewport column) */}
+      <div className="hidden lg:block w-72 shrink-0">
+        <Sidebar className="fixed inset-y-0 left-0 w-72 h-screen z-40" />
       </div>
 
       {/* Mobile Drawer Sidebar */}

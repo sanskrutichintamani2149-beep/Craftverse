@@ -12,6 +12,7 @@ const ForgotPasswordPage = lazy(() => import('@/pages/auth/ForgotPasswordPage').
 const ResetPasswordPage = lazy(() => import('@/pages/auth/ResetPasswordPage').then(m => ({ default: m.ResetPasswordPage })));
 const TermopediaHomePage = lazy(() => import('@/pages/termopedia/TermopediaHomePage').then(m => ({ default: m.TermopediaHomePage })));
 const TermDetailPage = lazy(() => import('@/pages/termopedia/TermDetailPage').then(m => ({ default: m.TermDetailPage })));
+const TrackDetailPage = lazy(() => import('@/pages/termopedia/TrackDetailPage').then(m => ({ default: m.TrackDetailPage })));
 const DashboardPage = lazy(() => import('@/pages/dashboard/DashboardPage').then(m => ({ default: m.DashboardPage })));
 const WhatIfPage = lazy(() => import('@/pages/whatif/WhatIfPage').then(m => ({ default: m.WhatIfPage })));
 const GoalPlannerPage = lazy(() => import('@/pages/goals/GoalPlannerPage').then(m => ({ default: m.GoalPlannerPage })));
@@ -75,6 +76,7 @@ export const App: React.FC = () => {
           <Route element={<AppShell />}>
             <Route path="/" element={<RootRoute />} />
             <Route path="/term/:slug" element={<TermDetailPage />} />
+            <Route path="/track/:slug" element={<TrackDetailPage />} />
             <Route path="/dashboard" element={<DashboardPage />} />
             <Route path="/what-if" element={<WhatIfPage />} />
             <Route path="/goal-planner" element={<GoalPlannerPage />} />

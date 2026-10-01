@@ -25,6 +25,9 @@ import {
   Cell,
   PieChart,
   Pie,
+  Line,
+  ComposedChart,
+  Legend,
 } from 'recharts';
 import { useFinancialData } from '@/context/FinancialDataContext';
 import { formatINR, formatCompactINR } from '@/utils/formatters';
@@ -32,7 +35,8 @@ import { Card } from '@/components/common/Card';
 import { Button } from '@/components/common/Button';
 
 export const DashboardPage: React.FC = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const lang = i18n.language;
   const { profile, salaryBreakdown, updateFinancialProfile } = useFinancialData();
 
   // Form State
@@ -78,16 +82,22 @@ export const DashboardPage: React.FC = () => {
     window.dispatchEvent(event);
   };
 
-  // 12-Month Projection Data
+  // 12-Month Projection Data: Month 1 = starting savings + (income - expenses), Month 2-12 = prev cumulative + net monthly
+  const monthlyIncome = salaryBreakdown?.inHandMonthly || 0;
+  const monthlyExp = profile.monthlyExpenses || 0;
+  const netMonthlySavings = Math.max(0, monthlyIncome - monthlyExp);
+  const startingSavings = profile.existingSavings || 0;
+
   const projectionData = salaryBreakdown
     ? Array.from({ length: 12 }, (_, i) => {
-        const monthIndex = i + 1;
-        const cumulativeSavings =
-          (profile.existingSavings || 0) + salaryBreakdown.potentialMonthlySavings * monthIndex;
+        const monthNum = i + 1;
+        const cumulativeSavings = startingSavings + (netMonthlySavings * monthNum);
         return {
-          month: `M${monthIndex}`,
-          savings: Math.round(cumulativeSavings),
-          netPay: Math.round(salaryBreakdown.inHandMonthly * monthIndex),
+          month: lang === 'hi' ? `माह ${monthNum}` : lang === 'mr' ? `महिना ${monthNum}` : `M${monthNum}`,
+          income: Math.round(monthlyIncome),
+          expenses: Math.round(monthlyExp),
+          monthlySavings: Math.round(netMonthlySavings),
+          cumulativeSavings: Math.round(cumulativeSavings),
         };
       })
     : [];
@@ -248,14 +258,31 @@ export const DashboardPage: React.FC = () => {
       {/* Content State: Either Empty State or Real Calculated Dashboard */}
       {!salaryBreakdown ? (
         /* Strict No Fake Data Empty State */
-        <div className="glass-card p-12 text-center space-y-4 max-w-lg mx-auto border border-brand-cyan/25">
-          <div className="w-16 h-16 rounded-2xl bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center mx-auto text-brand-cyan">
+        <div className="glass-card p-12 text-center space-y-4 max-w-lg mx-auto border border-brand-blue/20 dark:border-brand-cyan/25">
+          <div className="w-16 h-16 rounded-2xl bg-brand-cyan/10 border border-brand-cyan/30 flex items-center justify-center mx-auto text-brand-blue dark:text-brand-cyan">
             <Wallet className="w-8 h-8" />
           </div>
-          <h3 className="text-xl font-bold text-white">{t('dashboard.emptyStateTitle')}</h3>
-          <p className="text-xs text-typography-muted leading-relaxed">
-            {t('dashboard.emptyStateDesc')}
+          <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+            {lang === 'hi' ? 'अभी तक कोई वित्तीय डेटा नहीं' : lang === 'mr' ? 'अद्याप कोणताही आर्थिक डेटा नाही' : 'No Financial Data Yet'}
+          </h3>
+          <p className="text-xs text-slate-600 dark:text-typography-muted leading-relaxed">
+            {lang === 'hi'
+              ? 'अपना वार्षिक सिंहावलोकन देखने के लिए अपनी आय और खर्च दर्ज करें।'
+              : lang === 'mr'
+              ? 'तुमचा वार्षिक आढावा पाहण्यासाठी तुमचे उत्पन्न आणि खर्च नोंदवा.'
+              : 'No financial data yet. Enter your income and expenses to view your yearly overview.'}
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              const input = document.getElementById('annualCtc');
+              if (input) input.focus();
+            }}
+            className="btn-gradient px-4 py-2 rounded-xl text-xs font-semibold text-white"
+          >
+            {lang === 'hi' ? 'आय व खर्च दर्ज करें' : lang === 'mr' ? 'उत्पन्न व खर्च भरा' : 'Enter Financial Data'}
+          </button>
         </div>
       ) : (
         /* Real Calculated Salary Breakdown & Overview */
@@ -495,24 +522,29 @@ export const DashboardPage: React.FC = () => {
           </div>
 
           {/* 12-Month Accumulation Projection Chart */}
-          <Card className="p-6 md:p-8 border border-brand-cyan/30">
+          <Card className="p-6 md:p-8 border border-brand-blue/20 dark:border-brand-cyan/30">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6">
               <div>
-                <h3 className="text-base font-bold text-white">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
                   {t('dashboard.yearlyOverview')}
                 </h3>
-                <p className="text-xs text-typography-muted mt-0.5">
-                  12-Month projection of cumulative savings based on your potential monthly savings of {formatINR(salaryBreakdown.potentialMonthlySavings)}
+                <p className="text-xs text-slate-600 dark:text-typography-muted mt-0.5">
+                  {lang === 'hi'
+                    ? `मासिक बचत ${formatINR(netMonthlySavings)} के आधार पर 12 महीने का संचयी अनुमान`
+                    : lang === 'mr'
+                    ? `दरमहा बचत ${formatINR(netMonthlySavings)} वर आधारित १२ महिन्यांचा संचयी अंदाज`
+                    : `12-Month projection of monthly cashflow and cumulative savings starting from ${formatINR(startingSavings)}`}
                 </p>
               </div>
               <div className="text-xs font-bold text-brand-teal bg-brand-teal/10 px-3 py-1.5 rounded-xl border border-brand-teal/30">
-                1-Year Potential: {formatINR(salaryBreakdown.yearlySavings + (profile.existingSavings || 0))}
+                {lang === 'hi' ? '1-वर्ष का कुल संचय: ' : lang === 'mr' ? '१-वर्षाचा एकूण संचय: ' : '1-Year Cumulative: '}
+                {formatINR((netMonthlySavings * 12) + startingSavings)}
               </div>
             </div>
 
-            <div className="h-64 w-full">
+            <div className="h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={projectionData} margin={{ top: 10, right: 10, left: 10, bottom: 0 }}>
+                <ComposedChart data={projectionData} margin={{ top: 10, right: 15, left: 10, bottom: 0 }}>
                   <XAxis dataKey="month" stroke="#64789F" fontSize={11} tickLine={false} />
                   <YAxis
                     stroke="#64789F"
@@ -521,24 +553,42 @@ export const DashboardPage: React.FC = () => {
                     tickFormatter={(v) => formatCompactINR(v)}
                   />
                   <Tooltip
-                    formatter={(v: number) => formatINR(v)}
+                    formatter={(v: number, name: string) => {
+                      const labelMap: Record<string, string> = {
+                        cumulativeSavings: lang === 'hi' ? 'कुल संचयी बचत' : lang === 'mr' ? 'एकूण संचयी बचत' : 'Cumulative Savings',
+                        monthlySavings: lang === 'hi' ? 'मासिक बचत' : lang === 'mr' ? 'मासिक बचत' : 'Monthly Savings',
+                        income: lang === 'hi' ? 'मासिक इन-हैंड' : lang === 'mr' ? 'मासिक इन-हँड' : 'Monthly In-Hand',
+                        expenses: lang === 'hi' ? 'मासिक खर्च' : lang === 'mr' ? 'मासिक खर्च' : 'Monthly Expenses',
+                      };
+                      return [formatINR(v), labelMap[name] || name];
+                    }}
                     contentStyle={{
-                      backgroundColor: '#071433',
+                      backgroundColor: 'rgba(7, 20, 51, 0.95)',
                       borderColor: 'rgba(40,200,255,0.4)',
                       borderRadius: '12px',
                       color: '#fff',
                       fontSize: '12px',
                     }}
                   />
-                  <Bar dataKey="savings" fill="url(#bar-grad)" radius={[6, 6, 0, 0]}>
-                    {projectionData.map((_, index) => (
-                      <Cell
-                        key={`bar-${index}`}
-                        fill={index % 2 === 0 ? '#12B8FF' : '#19E3C0'}
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
+                  <Legend
+                    formatter={(value) => {
+                      const legendMap: Record<string, string> = {
+                        monthlySavings: lang === 'hi' ? 'मासिक बचत' : lang === 'mr' ? 'मासिक बचत' : 'Monthly Savings',
+                        cumulativeSavings: lang === 'hi' ? 'संचयी बचत (कुल)' : lang === 'mr' ? 'संचयी बचत (एकूण)' : 'Cumulative Savings',
+                      };
+                      return <span className="text-xs text-slate-700 dark:text-slate-300 font-medium">{legendMap[value] || value}</span>;
+                    }}
+                  />
+                  <Bar dataKey="monthlySavings" name="monthlySavings" fill="#12B8FF" radius={[4, 4, 0, 0]} />
+                  <Line
+                    type="monotone"
+                    dataKey="cumulativeSavings"
+                    name="cumulativeSavings"
+                    stroke="#19E3C0"
+                    strokeWidth={3}
+                    dot={{ fill: '#19E3C0', r: 4 }}
+                  />
+                </ComposedChart>
               </ResponsiveContainer>
             </div>
           </Card>
